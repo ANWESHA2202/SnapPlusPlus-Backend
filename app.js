@@ -10,8 +10,8 @@ app.use('/api/users', userRouter);
 
 mongoose.connect(`mongodb+srv://anweshasanyal22:${process.env.MONGODB_PASSWORD}@cluster0.wfajdr8.mongodb.net/${process.env.MONGODB_PROJECTNAME}?retryWrites=true&w=majority`)
     .then(() => {
-        app.listen(5000, () => {
-            console.log('Server is running on port 5000');
+        app.listen(4000, () => {
+            console.log('Server is running on port 4000');
         });
     }).then(() => {
         console.log('Database connected successfully');
