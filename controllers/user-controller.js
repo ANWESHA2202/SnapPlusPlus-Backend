@@ -1,43 +1,70 @@
 import User from "../models/User";
 import bcrypt from "bcryptjs";
+import { config } from "dotenv";
+import jwt from "jsonwebtoken";
 
-export const signup=async(req,res)=>{
-    const {username,email,password}=req.body;
-    let mailExist,usernameExist;
-    try{
-        usernameExist=await User.findOne({username:username});
-        mailExist=await User.findOne({email:email});
-    }catch(err){
-        return res.status(500).json([{message:err.message}]);
+config();
+
+
+
+export const signup = async(req, res) => {
+    const { username, email, password } = req.body;
+    let mailExist, usernameExist;
+    try {
+        usernameExist = await User.findOne({ username: username });
+        mailExist = await User.findOne({ email: email });
+    } catch (err) {
+        return res.status(500).json([{ message: err.message }]);
     }
-    if(usernameExist && !mailExist){
-        return res.status(400).json([{message:"Username already exists"}]);
+    if (usernameExist && !mailExist) {
+        return res.status(400).json([{ message: "Username already exists" }]);
+    } else if (usernameExist || mailExist) {
+        return res.status(400).json([{ message: "Username or email already exists" }]);
     }
-    else if(usernameExist || mailExist){
-        return res.status(400).json([{message:"Username or email already exists"}]);
+    if (!username || !email || !password) {
+        return res.status(400).json([{ message: "All fields are required" }]);
     }
-    if(!username || !email || !password){
-        return res.status(400).json([{message:"All fields are required"}]);
-    }
-    if(password.length<6){
-        return res.status(400).json([{message:"Password must be atleast 6 characters long"}]);
+    if (password.length < 6) {
+        return res.status(400).json([{ message: "Password must be atleast 6 characters long" }]);
     }
 
-    const user=new User({
-        username:username,
-        email:email,
-        password:bcrypt.hashSync(password,10),
+    const user = new User({
+        username: username,
+        email: email,
+        password: bcrypt.hashSync(password, 10),
     });
 
-    try{
-        await user.save();    
-    }
-    catch(err){ 
-        return res.status(500).json([{message:err.message}]);
+    try {
+        await user.save();
+    } catch (err) {
+        return res.status(500).json([{ message: err.message }]);
     }
 
-    return res.status(201).json([{message:"User created successfully",user:user}]);
+    return res.status(201).json([{ message: "User created successfully", user: user }]);
 }
 
 
 
+export const login = async(req, res) => {
+    const { username, password } = req.body;
+    let user;
+    try {
+        user = await User.findOne({ username: username });
+    } catch (err) {
+        return res.status(500).json([{ message: err.message }]);
+    }
+    if (!user) {
+        return res.status(400).json([{ message: "Username doesn't exist" }]);
+    }
+    if (!bcrypt.compareSync(password, user.password)) {
+        return res.status(400).json([{ message: "Password is incorrect" }]);
+    }
+
+    jwt.sign({ user: user }, process.env.JWT_SECRET_KEY, { expiresIn: '100000000s' }, (err, token) => {
+        if (err) {
+            return res.status(500).json([{ message: err.message }]);
+        }
+        res.json([{ message: "Login successful", token: token }]);
+    });
+    return res.status(200).json([{ message: "Login successful", user: user }]);
+}
