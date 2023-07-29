@@ -184,3 +184,36 @@ export const updateProfileEmail = async(req, res) => {
     });
 
 }
+
+
+export const updateProfilePassword = async(req, res) => {
+    const { password } = req.body;
+    const token = req.token;
+    const email = jwt.decode(token).user.email;
+    const oldPassword = jwt.decode(token).user.password;
+    let user;
+
+    if (bcrypt.compareSync(password, oldPassword)) {
+        return res.status(400).json([{ message: "Password is same as previous password" }])
+    }
+
+    try {
+        user = await User.findOneAndUpdate({ email: email }, {
+            password: bcrypt.hashSync(password, 10)
+        });
+
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }]);
+    }
+    if (!user) {
+        return res.status(404).json([{ message: "User Not Found" }])
+    }
+
+    jwt.sign({ user: user }, process.env.JWT_SECRET_KEY, { expiresIn: '100000000s' }, (err, token) => {
+        if (err) {
+            return res.status(500).json([{ message: err.message }]);
+        }
+        return res.status(200).json([{ message: "Password Updated", user, token: token }]);
+    });
+
+}
