@@ -1,5 +1,5 @@
 import express from 'express';
-import { signup, login, getUserProfile, updateProfilePicture, updateProfileUsername, updateProfileEmail, updateProfilePassword } from '../controllers/user-controller';
+import { signup, login, getUserProfile, updateProfilePicture, updateProfileUsername, updateProfileEmail, updateProfilePassword, signOut } from '../controllers/user-controller';
 import { config } from 'dotenv';
 
 config();
@@ -26,6 +26,6 @@ userRouter.post('/myprofile/updateprofilepicture', checkToken, updateProfilePict
 userRouter.post('/myprofile/updateprofileusername', checkToken, updateProfileUsername);
 userRouter.post('/myprofile/updateprofileemail', checkToken, updateProfileEmail);
 userRouter.post('/myprofile/updateprofilepassword', checkToken, updateProfilePassword);
-
+userRouter.post('/signout', checkToken, signOut);
 
 export default userRouter;

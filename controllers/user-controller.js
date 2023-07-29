@@ -217,3 +217,25 @@ export const updateProfilePassword = async(req, res) => {
     });
 
 }
+
+
+export const signOut = async(req, res) => {
+    const token = req.token;
+    const userName = jwt.decode(token).user.username;
+
+    let user;
+    try {
+        user = User.findOne({ username: userName });
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }]);
+    }
+    if (!user) {
+        return res.status(404).json([{ message: "User Not Found" }])
+    }
+    try {
+        await User.deleteOne({ username: userName });
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }]);
+    }
+    return res.status(200).json([{ message: "User Deleted", user }])
+}
