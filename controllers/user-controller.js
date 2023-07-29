@@ -47,7 +47,10 @@ export const signup = async(req, res) => {
 
 export const login = async(req, res) => {
     const { username, password } = req.body;
-    let user;
+    if (!username || !password) {
+        return res.status(400).json([{ message: "All fields are required" }]);
+    }
+    let user, generatedToken;
     try {
         user = await User.findOne({ username: username });
     } catch (err) {
@@ -64,7 +67,81 @@ export const login = async(req, res) => {
         if (err) {
             return res.status(500).json([{ message: err.message }]);
         }
-        res.json([{ message: "Login successful", token: token }]);
+        return res.status(200).json([{ message: "Login successful", token: token }]);
     });
-    return res.status(200).json([{ message: "Login successful", user: user }]);
+    // return res.status(200).json([{ message: "Login successful", token: generatedToken }]);
+}
+
+
+export const getUserProfile = async(req, res) => {
+    const token = req.token;
+    const userName = jwt.decode(token).user.username;
+    let user;
+
+    try {
+        user = await User.findOne({ username: userName });
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }]);
+    }
+    if (!user) {
+        return res.status(404).json([{ message: "User Not Found" }])
+    }
+    return res.status(200).json([{ message: 'User Found', user }])
+}
+
+export const updateProfilePicture = async(req, res) => {
+    const token = req.token;
+    const userName = jwt.decode(token).user.username;
+    let user;
+
+    try {
+        user = await User.findOneAndUpdate({ username: userName }, {
+            profilePicture: req.body.profilePicture
+        });
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }]);
+    }
+    if (!user) {
+        return res.status(404).json([{ message: "User Not Found" }])
+    }
+    return res.status(200).json([{ message: 'Profile Picture Updated', user }])
+}
+
+export const updateProfileUsername = async(req, res) => {
+    const { userName } = req.body;
+    const token = req.token;
+    const oldUserName = jwt.decode(token).user.username;
+    let user;
+
+    if (userName === oldUserName) {
+        return res.status(400).json([{ message: "Username is same as previous username" }])
+    }
+
+    try {
+        user = await User.findOne({ username: userName });
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }]);
+    }
+    if (user) {
+        return res.status(400).json([{ message: "Username already exists" }])
+    }
+
+    try {
+        user = await User.findOneAndUpdate({ username: oldUserName }, {
+            username: userName
+        });
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }]);
+    }
+    if (!user) {
+        return res.status(404).json([{ message: "User Not Found" }])
+    }
+
+    jwt.sign({ user: user }, process.env.JWT_SECRET_KEY, { expiresIn: '100000000s' }, (err, token) => {
+        if (err) {
+            return res.status(500).json([{ message: err.message }]);
+        }
+        return res.status(200).json([{ message: "Username Updated", user, token: token }]);
+    });
+
 }

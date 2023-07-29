@@ -1,7 +1,7 @@
 import express from 'express';
-import { signup, login } from '../controllers/user-controller';
+import { signup, login, getUserProfile, updateProfilePicture, updateProfileUsername } from '../controllers/user-controller';
 import { config } from 'dotenv';
-import jwt from 'jsonwebtoken';
+
 config();
 
 const userRouter = express.Router();
@@ -20,7 +20,10 @@ function checkToken(req, res, next) {
 }
 
 userRouter.post('/signup', signup);
-userRouter.post('/login', login)
+userRouter.post('/login', login);
+userRouter.post('/myprofile', checkToken, getUserProfile);
+userRouter.post('/myprofile/updateprofilepicture', checkToken, updateProfilePicture);
+userRouter.post('/myprofile/updateprofileusername', checkToken, updateProfileUsername);
 
 
 export default userRouter;
