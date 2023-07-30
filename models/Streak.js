@@ -9,6 +9,10 @@ const streakSchema = new Schema({
         minlength: 3,
         maxlength: 20
     },
+    icon: {
+        type: String,
+        required: true
+    },
     count: {
         type: Number,
         required: true,

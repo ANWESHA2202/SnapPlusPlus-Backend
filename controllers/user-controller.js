@@ -209,12 +209,9 @@ export const updateProfilePassword = async(req, res) => {
         return res.status(404).json([{ message: "User Not Found" }])
     }
 
-    jwt.sign({ user: user }, process.env.JWT_SECRET_KEY, { expiresIn: '100000000s' }, (err, token) => {
-        if (err) {
-            return res.status(500).json([{ message: err.message }]);
-        }
-        return res.status(200).json([{ message: "Password Updated", user, token: token }]);
-    });
+
+    return res.status(200).json([{ message: "Password Updated", user }]);
+
 
 }
 
