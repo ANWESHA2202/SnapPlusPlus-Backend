@@ -1,6 +1,8 @@
+import mongoose from "mongoose";
 import User from "../models/User";
 import Streak from "../models/Streak";
 import { generateRandomStreakIcon } from '../Utilities/random-streak-icon';
+import { daysBetweenDates, getFormattedCurrentDate } from "../Utilities/date";
 import { config } from "dotenv";
 import jwt from "jsonwebtoken";
 
@@ -22,8 +24,15 @@ export const createStreak = async(req, res) => {
 
     const { title, icon } = req.body;
     let streakIcon = icon;
-    const titleExist = user.streaks.filter((streak) => streak.title == title);
-
+    let titleExist;
+    try {
+        titleExist = await Streak.find({
+            title: title,
+            user: userId
+        })
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }])
+    }
     if (titleExist.length > 0) {
         return res.status(400).json([{ message: "Streak already exists" }])
     }
@@ -33,19 +42,79 @@ export const createStreak = async(req, res) => {
 
     const streak = new Streak({
         title,
-        user: user._id,
         count: 0,
-        icon: streakIcon
+        user: userId,
+        icon: streakIcon,
+        lastUpdateDate: getFormattedCurrentDate()
     })
 
     try {
-        const savedStreak = await streak.save();
-        user.streaks.push(savedStreak);
-        await user.save();
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        await streak.save({ session });
+        user.streaks.push(streak);
+        await user.save({ session })
+        await session.commitTransaction();
 
     } catch (err) {
         return res.status(400).json([{ message: err.message }]);
     }
     return res.status(200).json([{ message: 'Streak Created', streak }])
+
+}
+
+
+export const updateStreak = async(req, res) => {
+    const { title, note, image } = req.body;
+    const token = req.token;
+    const userId = jwt.decode(token).user._id;
+
+    let user, streak;
+    try {
+        user = await User.findById(userId);
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }])
+    }
+    if (!user) {
+        return res.status(404).json([{ message: "User Not Found" }])
+    }
+    try {
+        streak = await Streak.findOne({
+            title: title,
+            user: userId
+        });
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }])
+    }
+    if (!streak) {
+        return res.status(404).json([{ message: "Streak Is Not Created Yet" }])
+    }
+
+
+    let currentDate = getFormattedCurrentDate();
+    let lastUpdateDate = streak.lastUpdateDate;
+    let daysDiff = daysBetweenDates(lastUpdateDate, currentDate);
+
+    if (daysDiff == 1) {
+        try {
+            streak.count += 1;
+            if (note) streak.notes.push(note);
+            if (image) streak.images.push(image);
+            streak.lastUpdateDate = currentDate;
+            await streak.save();
+        } catch (err) {
+            return res.status(400).json([{ message: err.message }])
+        }
+    } else {
+        try {
+            if (note) streak.notes.push(note);
+            if (image) streak.images.push(image);
+            await streak.save();
+        } catch (err) {
+            return res.status(400).json([{ message: err.message }])
+        }
+    }
+
+    return res.status(200).json([{ message: 'Streak Updated', streak }])
 
 }

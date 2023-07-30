@@ -23,10 +23,14 @@ const streakSchema = new Schema({
     notes: [{
         type: String,
     }],
-    users: [{
+    user: {
         type: Schema.Types.ObjectId,
         ref: 'User'
-    }]
+    },
+    lastUpdateDate: {
+        type: String,
+        required: true
+    }
 
 });
 
