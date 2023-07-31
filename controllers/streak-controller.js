@@ -213,3 +213,33 @@ export const updateStreakIcon = async(req, res) => {
     return res.status(200).json([{ message: 'Streak Icon Updated', streak }])
 
 }
+
+
+export const deleteStreak = async(req, res) => {
+    const { title } = req.body;
+    const token = req.token;
+    const userId = jwt.decode(token).user._id;
+
+    let streak;
+    try {
+        streak = await Streak.findOne({
+            title: title,
+            user: userId
+        })
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }])
+    }
+
+    if (!streak) {
+        return res.status(404).json([{ message: "Streak Not Found" }])
+    }
+    try {
+        await Streak.deleteOne({
+            title: title,
+            user: userId
+        })
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }])
+    }
+    return res.status(200).json([{ message: 'Streak Deleted' }])
+}
