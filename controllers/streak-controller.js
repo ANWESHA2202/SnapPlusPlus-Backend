@@ -118,3 +118,68 @@ export const updateStreak = async(req, res) => {
     return res.status(200).json([{ message: 'Streak Updated', streak }])
 
 }
+
+export const updateStreakTitle = async(req, res) => {
+    const { title, newTitle } = req.body;
+    const token = req.token;
+    const userId = jwt.decode(token).user._id;
+
+    let streak;
+    try {
+        streak = await Streak.findOne({
+            title: title,
+            user: userId
+        })
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }])
+    }
+
+    if (!streak) {
+        return res.status(404).json([{ message: "Streak Not Found" }])
+    }
+
+    if (title === newTitle) {
+        return res.status(400).json([{ message: "New Title is same as old title" }])
+    }
+    try {
+        streak.title = newTitle;
+        await streak.save();
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }])
+    }
+    return res.status(200).json([{ message: 'Streak Title Updated', streak }])
+}
+
+export const updateStreakIcon = async(req, res) => {
+    const { title, icon } = req.body;
+    const token = req.token;
+    const userId = jwt.decode(token).user._id;
+
+    let streak;
+    try {
+        streak = await Streak.findOne({
+            title: title,
+            user: userId
+        })
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }])
+    }
+
+    if (!streak) {
+        return res.status(404).json([{ message: "Streak Not Found" }])
+    }
+
+
+    try {
+        if (icon.length === 0) {
+            streak.icon = generateRandomStreakIcon();
+        } else {
+            streak.icon = icon;
+        }
+        await streak.save();
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }])
+    }
+    return res.status(200).json([{ message: 'Streak Icon Updated', streak }])
+
+}
