@@ -8,6 +8,36 @@ import jwt from "jsonwebtoken";
 
 config();
 
+
+export const getAllStreaksOfAUser = async(req, res) => {
+    const token = req.token;
+    const userId = jwt.decode(token).user._id;
+
+    let user, streaks;
+    try {
+        user = await User.findById(userId);
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }])
+    }
+
+    if (!user) {
+        return res.status(404).json([{ message: "User Not Found" }])
+    }
+
+    try {
+        streaks = await Streak.find({
+            user: userId
+        })
+    } catch (err) {
+        return res.status(400).json([{ message: err.message }])
+
+    }
+    if (streaks.length === 0) {
+        return res.status(404).json([{ message: "No Streaks Found" }])
+    }
+    return res.status(200).json([{ message: 'Streaks Found', streaks }])
+}
+
 export const createStreak = async(req, res) => {
     const token = req.token;
     const userId = jwt.decode(token).user._id;
