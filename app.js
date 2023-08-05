@@ -1,12 +1,14 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import { config } from 'dotenv';
+import cors from 'cors'
 import userRouter from './routes/user-routes.js';
 import streakRouter from './routes/streak-routes.js';
 
 const app = express();
 config();
 app.use(express.json());
+app.use(cors());
 app.use('/api/users', userRouter);
 app.use('/api/users/streaks', streakRouter);
 
