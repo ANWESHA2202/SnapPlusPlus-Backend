@@ -8,6 +8,7 @@ config();
 
 export const signup = async (req, res) => {
   const { username, email, password } = req.body;
+  console.log(req.body, username, email, password);
   let mailExist, usernameExist;
   try {
     usernameExist = await User.findOne({ username: username });

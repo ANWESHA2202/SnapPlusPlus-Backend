@@ -8,13 +8,14 @@ import streakRouter from "./routes/streak-routes.js";
 const app = express();
 config();
 app.use(express.json());
+app.use(express.urlencoded());
 app.use(cors());
 app.use("/api/users", userRouter);
 app.use("/api/users/streaks", streakRouter);
 
 mongoose
   .connect(
-    `mongodb+srv://anweshasanyal22:${process.env.MONGODB_PASSWORD}@cluster0.wfajdr8.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
+    `mongodb+srv://ShivangiSingh:shivangi123@promptbook.dfmmvsd.mongodb.net/?retryWrites=true&w=majority&appName=Promptbook`
   )
   .then(() => {
     app.listen(4000, () => {
